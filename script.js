@@ -94,18 +94,27 @@ function renderBookmarks(data) {
       sectionDiv.appendChild(title);
 
       const list = document.createElement('ul');
-      section.links.forEach(link => {
+      section.links.forEach(itemData => {
         const item = document.createElement('li');
         item.className = styles.listItem;
 
-        const anchor = document.createElement('a');
-        anchor.href = link.url;
-        anchor.textContent = link.name;
-        anchor.className = `${styles.link} text-blue-600 dark:text-blue-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200`;
-        anchor.target = '_blank';
-        anchor.rel = 'noopener noreferrer';
-
-        item.appendChild(anchor);
+        if (itemData.type === 'divider') {
+          const divider = document.createElement('div');
+          divider.className = 'border-t border-gray-300 dark:border-gray-700 my-2'; // Tailwind classes for a horizontal line
+          item.appendChild(divider);
+        } else if (itemData.type === 'spacer') {
+          const spacer = document.createElement('div');
+          spacer.className = itemData.height || 'h-4'; // Default height if not specified
+          item.appendChild(spacer);
+        } else {
+          const anchor = document.createElement('a');
+          anchor.href = itemData.url;
+          anchor.textContent = itemData.name;
+          anchor.className = `${styles.link} text-blue-600 dark:text-blue-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200`;
+          anchor.target = '_blank';
+          anchor.rel = 'noopener noreferrer';
+          item.appendChild(anchor);
+        }
         list.appendChild(item);
       });
 
@@ -124,27 +133,38 @@ searchBar.addEventListener('keyup', () => {
   const sections = document.querySelectorAll('.bookmark-section');
 
   sections.forEach(section => {
-    const title = section.querySelector('h2').textContent.toLowerCase();
-    const links = section.querySelectorAll('li');
+    const titleElement = section.querySelector('h2');
+    const title = titleElement.textContent.toLowerCase();
+    const listItems = section.querySelectorAll('li');
+
     let sectionHasMatch = false;
 
     if (title.includes(searchTerm)) {
       sectionHasMatch = true;
     }
 
-    links.forEach(link => {
-      const linkName = link.textContent.toLowerCase();
-      if (linkName.includes(searchTerm)) {
-        link.style.display = '';
-        sectionHasMatch = true;
-      } else {
-        link.style.display = 'none';
+    listItems.forEach(item => {
+      const anchor = item.querySelector('a');
+      const divider = item.querySelector('div.border-t');
+      const spacer = item.querySelector('div[class*="h-"]');
+
+      if (anchor) {
+        const linkName = anchor.textContent.toLowerCase();
+        if (linkName.includes(searchTerm)) {
+          item.style.display = '';
+          sectionHasMatch = true;
+        } else {
+          item.style.display = 'none';
+        }
+      } else if (divider || spacer) {
+        item.style.display = '';
+        // Dividers and spacers always visible, no need to set sectionHasMatch here
       }
     });
 
     if (title.includes(searchTerm)) {
-        links.forEach(link => {
-            link.style.display = '';
+        listItems.forEach(item => {
+            item.style.display = '';
         });
     }
 
